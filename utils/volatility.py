@@ -1,16 +1,19 @@
 import numpy as np
+from datetime import datetime, timedelta
 import yfinance as yf
 import pandas as pd
-import matplotlib.pyplot as plt
-from datetime import datetime, timedelta
 
-# returns the historical volatility over a period of time for a given stock
-def volatility(ticker, start, end, window=30):
+def historical_volatility(ticker: str, start: datetime, end: datetime, window: int = 30) -> pd.DataFrame:
     tk = yf.Ticker(ticker)
-    data = tk.history(start=start, end=end)
     
-    returns = np.log(data['Close'] / data['Close'].shift(1)l)
+    data = tk.history(start=start-timedelta(days=window*2), end=end)
+    returns = np.log(data['Close'] / data['Close'].shift(1))
     
     vol = returns.rolling(window=window).std() * np.sqrt(252)
     
-    return vol
+    if vol.index.tz is not None and start.tzinfo is None:
+        start = pd.Timestamp(start).tz_localize(vol.index.tz)
+    
+    filtered_vol = vol[vol.index >= start]
+
+    return pd.DataFrame({"volatility": filtered_vol})
