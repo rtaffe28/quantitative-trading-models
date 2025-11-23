@@ -144,9 +144,18 @@ class BacktestSimulation:
                 actions=TradingAction
             )
             
+            # Get current volatility for option valuation
+            current_volatility = None
+            if self.tickers[0] in self.volatility_data:
+                vol_data = self.volatility_data[self.tickers[0]].loc[:current_date_tz]
+                if len(vol_data) > 0:
+                    vol = vol_data.iloc[-1, 0] if hasattr(vol_data.iloc[-1], '__iter__') else vol_data.iloc[-1]
+                    if not pd.isna(vol):
+                        current_volatility = vol
+            
             stock_value = self.portfolio.get_stock_value(current_prices)
-            options_value = self.portfolio.get_options_value(current_date, current_prices)
-            total_value = self.portfolio.get_total_value(current_date, current_prices)
+            options_value = self.portfolio.get_options_value(current_date, current_prices, current_volatility)
+            total_value = self.portfolio.get_total_value(current_date, current_prices, current_volatility)
 
             self.history.append({
                 'date': current_date,
