@@ -1,204 +1,11 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime
-from typing import Callable, Dict, List, Optional, Tuple
-from dataclasses import dataclass, field
+from typing import Callable, Dict, List, Optional
 import yfinance as yf
 
-
-@dataclass
-class Position:
-    """Represents a stock position"""
-    ticker: str
-    shares: float
-    avg_cost: float
-
-
-@dataclass
-class OptionContract:
-    """Represents an option contract"""
-    ticker: str
-    strike: float
-    expiration_date: datetime
-    option_type: str  # 'call' or 'put'
-    contracts: int  # Number of contracts (100 shares each)
-    premium_received: float  # Premium received when sold (negative if bought)
-    position: str  # 'long' or 'short'
-
-
-@dataclass
-class Portfolio:
-    cash: float
-    positions: Dict[str, Position] = field(default_factory=dict)
-    options: List[OptionContract] = field(default_factory=list)
-    
-    def get_stock_value(self, prices: Dict[str, float]) -> float:
-        return sum(pos.shares * prices.get(pos.ticker, 0) for pos in self.positions.values())
-    
-    def get_options_value(self, current_date: datetime, prices: Dict[str, float], 
-                          pricing_func: Optional[Callable] = None) -> float:
-        total = 0
-        for opt in self.options:
-            if current_date >= opt.expiration_date:
-                continue
-            
-            if pricing_func:
-                intrinsic = self._get_intrinsic_value(opt, prices)
-                total += intrinsic * opt.contracts * 100
-            else:
-                intrinsic = self._get_intrinsic_value(opt, prices)
-                total += intrinsic * opt.contracts * 100
-                
-        return total
-    
-    def _get_intrinsic_value(self, opt: OptionContract, prices: Dict[str, float]) -> float:
-        current_price = prices.get(opt.ticker, 0)
-        
-        if opt.option_type == 'call':
-            intrinsic = max(0, current_price - opt.strike)
-        else:
-            intrinsic = max(0, opt.strike - current_price)
-        
-        if opt.position == 'short':
-            return -intrinsic
-        return intrinsic
-    
-    def get_total_value(self, current_date: datetime, prices: Dict[str, float],
-                       pricing_func: Optional[Callable] = None) -> float:
-        return (self.cash + 
-                self.get_stock_value(prices) + 
-                self.get_options_value(current_date, prices, pricing_func))
-
-
-class TradingAction:
-    # Class variable to store transaction log reference
-    _transaction_log = None
-    _current_date = None
-    
-    @classmethod
-    def set_transaction_log(cls, transaction_log: List[Dict], current_date: datetime):
-        """Set the transaction log for tracking"""
-        cls._transaction_log = transaction_log
-        cls._current_date = current_date
-    
-    @staticmethod
-    def buy_stock(portfolio: Portfolio, ticker: str, shares: int, price: float) -> bool:
-        cost = shares * price
-        if cost > portfolio.cash:
-            return False
-        
-        portfolio.cash -= cost
-        if ticker in portfolio.positions:
-            pos = portfolio.positions[ticker]
-            total_shares = pos.shares + shares
-            portfolio.positions[ticker].avg_cost = (pos.avg_cost * pos.shares + cost) / total_shares
-            portfolio.positions[ticker].shares = total_shares
-        else:
-            portfolio.positions[ticker] = Position(ticker, shares, price)
-        
-        # Log transaction
-        if TradingAction._transaction_log is not None:
-            TradingAction._transaction_log.append({
-                'date': TradingAction._current_date,
-                'action': 'BUY_STOCK',
-                'ticker': ticker,
-                'shares': shares,
-                'price': price,
-                'total': cost
-            })
-        
-        return True
-    
-    @staticmethod
-    def sell_stock(portfolio: Portfolio, ticker: str, shares: int, price: float) -> bool:
-        if ticker not in portfolio.positions or portfolio.positions[ticker].shares < shares:
-            return False
-        
-        proceeds = shares * price
-        portfolio.cash += proceeds
-        portfolio.positions[ticker].shares -= shares
-        
-        if portfolio.positions[ticker].shares == 0:
-            del portfolio.positions[ticker]
-        
-        # Log transaction
-        if TradingAction._transaction_log is not None:
-            TradingAction._transaction_log.append({
-                'date': TradingAction._current_date,
-                'action': 'SELL_STOCK',
-                'ticker': ticker,
-                'shares': shares,
-                'price': price,
-                'total': proceeds
-            })
-        
-        return True
-    
-    @staticmethod
-    def sell_call(portfolio: Portfolio, ticker: str, strike: float, expiration: datetime,
-                  contracts: int, premium: float) -> bool:
-        required_shares = contracts * 100
-        if ticker not in portfolio.positions or portfolio.positions[ticker].shares < required_shares:
-            return False
-        
-        premium_collected = premium * contracts * 100
-        portfolio.cash += premium_collected
-        
-        portfolio.options.append(OptionContract(
-            ticker=ticker,
-            strike=strike,
-            expiration_date=expiration,
-            option_type='call',
-            contracts=contracts,
-            premium_received=premium_collected,
-            position='short'
-        ))
-        
-        # Log transaction
-        if TradingAction._transaction_log is not None:
-            TradingAction._transaction_log.append({
-                'date': TradingAction._current_date,
-                'action': 'SELL_CALL',
-                'ticker': ticker,
-                'contracts': contracts,
-                'strike': strike,
-                'premium_per_share': premium,
-                'total_premium': premium_collected,
-                'expiration': expiration
-            })
-        
-        return True
-    
-    @staticmethod
-    def sell_put(portfolio: Portfolio, ticker: str, strike: float, expiration: datetime,
-                 contracts: int, premium: float) -> bool:
-        premium_collected = premium * contracts * 100
-        portfolio.cash += premium_collected
-        
-        portfolio.options.append(OptionContract(
-            ticker=ticker,
-            strike=strike,
-            expiration_date=expiration,
-            option_type='put',
-            contracts=contracts,
-            premium_received=premium_collected,
-            position='short'
-        ))
-        
-        # Log transaction
-        if TradingAction._transaction_log is not None:
-            TradingAction._transaction_log.append({
-                'date': TradingAction._current_date,
-                'action': 'SELL_PUT',
-                'ticker': ticker,
-                'contracts': contracts,
-                'strike': strike,
-                'premium_per_share': premium,
-                'total_premium': premium_collected,
-                'expiration': expiration
-            })
-        
-        return True
+from utils.portfolio import Portfolio, Position, OptionContract
+from utils.trading_actions import TradingAction
 
 
 class BacktestSimulation:
@@ -267,7 +74,7 @@ class BacktestSimulation:
                 if opt.option_type == 'call' and opt.position == 'short':
                     if current_price >= opt.strike:
                         shares_to_sell = opt.contracts * 100
-                        # Log call exercise before selling
+                        
                         self.transactions.append({
                             'date': current_date,
                             'action': 'CALL_EXERCISED',
@@ -283,7 +90,7 @@ class BacktestSimulation:
                 elif opt.option_type == 'put' and opt.position == 'short':
                     if current_price <= opt.strike:
                         shares_to_buy = opt.contracts * 100
-                        # Log put exercise before buying
+                        
                         self.transactions.append({
                             'date': current_date,
                             'action': 'PUT_EXERCISED',
@@ -309,7 +116,7 @@ class BacktestSimulation:
         print(f"Total trading days: {len(trading_dates)}")
         
         for current_date in trading_dates:
-            # Set the transaction log for this trading day
+            
             TradingAction.set_transaction_log(self.transactions, current_date)
             
             current_prices = self._get_current_prices(current_date)
@@ -399,14 +206,11 @@ class BacktestSimulation:
         df = pd.DataFrame(self.history)
         df['date'] = pd.to_datetime(df['date'])
         
-        # Calculate returns percentage
         df['return_pct'] = (df['total_value'] / self.initial_cash - 1) * 100
         
         if show_components:
-            # Create subplots
             fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
             
-            # Top plot: Portfolio value breakdown
             ax1.plot(df['date'], df['total_value'], label='Total Value', linewidth=2, color='black')
             ax1.fill_between(df['date'], 0, df['cash'], label='Cash', alpha=0.3)
             ax1.fill_between(df['date'], df['cash'], df['cash'] + df['stock_value'], 
@@ -422,10 +226,8 @@ class BacktestSimulation:
             ax1.grid(True, alpha=0.3)
             ax1.axhline(y=self.initial_cash, color='r', linestyle='--', alpha=0.5, label='Initial Capital')
             
-            # Format y-axis as currency
             ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
             
-            # Bottom plot: Returns
             ax2.plot(df['date'], df['return_pct'], label='Cumulative Return', linewidth=2, color='green')
             ax2.fill_between(df['date'], 0, df['return_pct'], alpha=0.3, color='green')
             ax2.set_xlabel('Date')
@@ -446,7 +248,6 @@ class BacktestSimulation:
             ax.grid(True, alpha=0.3)
             ax.axhline(y=0, color='black', linestyle='-', alpha=0.5)
             
-            # Add final return text
             final_return = df['return_pct'].iloc[-1]
             ax.text(0.02, 0.98, f'Final Return: {final_return:.2f}%', 
                    transform=ax.transAxes, verticalalignment='top',
