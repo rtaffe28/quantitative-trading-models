@@ -7,20 +7,26 @@ imported into any notebook or script.
 Available strategies:
 - LEAP Strategy: Buy long-dated call options for leverage
 - Covered Call Strategy: Sell calls against stock holdings for income
+- Wheel Strategy: Sell cash-secured puts and covered calls for income
 - Buy and Hold Strategy: Passive long-term holding
 
 Usage:
     from strategies.leap_strategy import create_leap_strategy
     from strategies.covered_call_strategy import create_covered_call_strategy
+    from strategies.wheel_strategy import create_wheel_strategy
     from strategies.buy_and_hold_strategy import create_buy_and_hold_strategy
 """
 
 from strategies.leap_strategy import create_leap_strategy
 from strategies.covered_call_strategy import create_covered_call_strategy
+from strategies.wheel_strategy import create_wheel_strategy, create_aggressive_wheel_strategy, create_conservative_wheel_strategy
 from strategies.buy_and_hold_strategy import create_buy_and_hold_strategy
 
 __all__ = [
     'create_leap_strategy',
     'create_covered_call_strategy',
+    'create_wheel_strategy',
+    'create_aggressive_wheel_strategy',
+    'create_conservative_wheel_strategy',
     'create_buy_and_hold_strategy',
 ]
