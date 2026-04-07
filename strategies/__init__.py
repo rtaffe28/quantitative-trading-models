@@ -33,6 +33,8 @@ from strategies.moving_average_strategy import (
     create_adaptive_ma_strategy
 )
 from strategies.buy_and_hold_strategy import create_buy_and_hold_strategy
+from strategies.trend_pullback_strategy import create_trend_pullback_strategy
+from strategies.squeeze_breakout_strategy import create_squeeze_breakout_strategy
 
 __all__ = [
     'create_leap_strategy',
@@ -45,4 +47,6 @@ __all__ = [
     'create_triple_ma_strategy',
     'create_adaptive_ma_strategy',
     'create_buy_and_hold_strategy',
+    'create_trend_pullback_strategy',
+    'create_squeeze_breakout_strategy',
 ]

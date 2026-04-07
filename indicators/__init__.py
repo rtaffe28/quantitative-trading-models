@@ -4,3 +4,6 @@ from indicators.momentum import create_rsi_indicator, create_macd_crossover_indi
 from indicators.volatility import create_volatility_spike_indicator, create_bollinger_squeeze_indicator
 from indicators.volume import create_volume_spike_indicator
 from indicators.mean_reversion import create_mean_reversion_indicator, create_zscore_indicator
+from indicators.adx import create_adx_indicator
+from indicators.relative_strength import create_relative_strength_indicator
+from indicators.keltner import create_keltner_breakout_indicator, create_squeeze_indicator
