@@ -35,6 +35,10 @@ from strategies.moving_average_strategy import (
 from strategies.buy_and_hold_strategy import create_buy_and_hold_strategy
 from strategies.trend_pullback_strategy import create_trend_pullback_strategy
 from strategies.squeeze_breakout_strategy import create_squeeze_breakout_strategy
+from strategies.dual_momentum_rotation_strategy import create_dual_momentum_rotation_strategy
+from strategies.obv_divergence_strategy import create_obv_divergence_strategy
+from strategies.ensemble_strategy import create_ensemble_strategy
+from strategies.adaptive_momentum_strategy import create_adaptive_momentum_strategy
 
 __all__ = [
     'create_leap_strategy',
@@ -49,4 +53,8 @@ __all__ = [
     'create_buy_and_hold_strategy',
     'create_trend_pullback_strategy',
     'create_squeeze_breakout_strategy',
+    'create_dual_momentum_rotation_strategy',
+    'create_obv_divergence_strategy',
+    'create_ensemble_strategy',
+    'create_adaptive_momentum_strategy',
 ]

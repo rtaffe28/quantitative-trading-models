@@ -73,7 +73,7 @@ def run_comparison(sim):
     for ticker in tickers:
         df = yf.download(ticker, start=start, end=end, progress=False)
         benchmark_data[ticker] = df["Close"]
-
+    breakpoint()
     benchmark_returns = pd.DataFrame()
     for ticker in tickers:
         prices = benchmark_data[ticker]

@@ -7,3 +7,7 @@ from indicators.mean_reversion import create_mean_reversion_indicator, create_zs
 from indicators.adx import create_adx_indicator
 from indicators.relative_strength import create_relative_strength_indicator
 from indicators.keltner import create_keltner_breakout_indicator, create_squeeze_indicator
+from indicators.rate_of_change import create_roc_indicator, compute_roc
+from indicators.obv import create_obv_trend_indicator, create_obv_divergence_indicator
+from indicators.vwap import create_vwap_discount_indicator, compute_vwap_deviation
+from indicators.regime import create_regime_indicator

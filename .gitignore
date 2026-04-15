@@ -4,3 +4,4 @@ __pycache__/
 .plans
 *.ipynb
 .ipynb_checkpoints/
+data
