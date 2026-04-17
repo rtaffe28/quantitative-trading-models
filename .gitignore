@@ -4,4 +4,7 @@ __pycache__/
 .plans
 *.ipynb
 .ipynb_checkpoints/
-data
+data/stocks.duckdb
+data/*.json
+data/__pycache__/
+data/*.png
