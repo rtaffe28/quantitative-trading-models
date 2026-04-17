@@ -6,5 +6,6 @@ __pycache__/
 .ipynb_checkpoints/
 data/stocks.duckdb
 data/*.json
+!data/tickers.json
 data/__pycache__/
 data/*.png

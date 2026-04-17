@@ -33,7 +33,29 @@ This starts a Postgres 17 container with the `prices` table already created. Dat
 
 The database starts empty. You have a few options for loading data:
 
-**Option A: Migrate from DuckDB (if you have `stocks.duckdb`)**
+**Option A: Download from yfinance (recommended for fresh setup)**
+
+Two scripts, run in order:
+
+```bash
+# 1. Build the ticker list (only needed once, or to refresh)
+python data/build_ticker_list.py
+
+# 2. Download price data and load into Postgres
+python data/seed.py
+```
+
+`build_ticker_list.py` fetches ~8,000+ US common stock tickers from NASDAQ FTP and SEC EDGAR (excludes ETFs, index funds, mutual funds, OTC) and writes them to `data/tickers.json` (committed to the repo).
+
+`seed.py` reads `tickers.json` and downloads full OHLCV history from yfinance. It's resumable — re-run to pick up where you left off. Failed tickers are logged to `data/failed_tickers.json`.
+
+**Updating with new data:** just run `seed.py` again. It checks the last date per ticker in the DB and only fetches new days. You can also update specific tickers:
+
+```bash
+python data/seed.py AAPL MSFT NVDA
+```
+
+**Option B: Migrate from DuckDB (if you have `stocks.duckdb`)**
 
 If you have the original DuckDB file, install duckdb temporarily and run the migration script:
 
@@ -43,9 +65,7 @@ python data/migrate_to_postgres.py
 pip uninstall duckdb
 ```
 
-This bulk-loads all rows in 500k chunks using `COPY`.
-
-**Option B: Load from a pg_dump**
+**Option C: Load from a pg_dump**
 
 If someone has shared a database dump:
 
@@ -53,7 +73,7 @@ If someone has shared a database dump:
 pg_restore -h localhost -U quant -d stocks dump.sql
 ```
 
-**Option C: Load from CSV**
+**Option D: Load from CSV**
 
 Place a CSV with columns matching the schema above and load it:
 
